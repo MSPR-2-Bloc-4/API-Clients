@@ -9,6 +9,10 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+
+
+
 class CustomerController extends AbstractController
 {
     #[Route('/customers', name: 'get_customers', methods: ['GET'])]
@@ -29,7 +33,7 @@ class CustomerController extends AbstractController
     }
 
     #[Route('/customers', name: 'create_customer', methods: ['POST'])]
-    public function createCustomer(Request $request, EntityManagerInterface $em): JsonResponse
+    public function createCustomer(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
@@ -37,7 +41,14 @@ class CustomerController extends AbstractController
         $customer->setName($data['name']);
         $customer->setPhone($data['phone']);
         $customer->setEmail($data['email']);
-        $customer->setPassword($data['password']); // Note: Store hashed password in a real application
+
+        // hash the password (based on the security.yaml config for the $user class)
+        $hashedPassword = $passwordHasher->hashPassword(
+            $customer,
+            $data['password']
+        );
+        
+        $customer->setPassword($hashedPassword);
 
         $em->persist($customer);
         $em->flush();
@@ -46,7 +57,7 @@ class CustomerController extends AbstractController
     }
 
     #[Route('/customers/{id}', name: 'update_customer', methods: ['PUT', 'PATCH'])]
-    public function updateCustomer(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    public function updateCustomer(int $id, Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
         $customer = $em->getRepository(Customer::class)->find($id);
         if (!$customer) {
@@ -57,7 +68,12 @@ class CustomerController extends AbstractController
         $customer->setName($data['name'] ?? $customer->getName());
         $customer->setPhone($data['phone'] ?? $customer->getPhone());
         $customer->setEmail($data['email'] ?? $customer->getEmail());
-        $customer->setPassword($data['password'] ?? $customer->getPassword());
+
+
+        if (isset($data['password'])) {
+            $hashedPassword = $passwordHasher->hashPassword($customer, $data['password']);
+            $customer->setPassword($hashedPassword);
+        }
 
         $em->flush();
 

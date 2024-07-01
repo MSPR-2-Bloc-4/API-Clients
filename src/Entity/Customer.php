@@ -4,9 +4,11 @@ namespace App\Entity;
 
 use App\Repository\CustomerRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
-class Customer
+class Customer implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -38,7 +40,6 @@ class Customer
     public function setName(string $name): static
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -50,7 +51,6 @@ class Customer
     public function setPhone(string $phone): static
     {
         $this->phone = $phone;
-
         return $this;
     }
 
@@ -62,7 +62,6 @@ class Customer
     public function setEmail(string $email): static
     {
         $this->email = $email;
-
         return $this;
     }
 
@@ -74,7 +73,24 @@ class Customer
     public function setPassword(string $password): static
     {
         $this->password = $password;
-
         return $this;
+    }
+
+    public function getRoles(): array
+    {
+        // Par défaut, tous les utilisateurs ont le rôle "ROLE_USER"
+        return ['ROLE_USER'];
+    }
+
+    public function getUserIdentifier(): string
+    {
+        // Retourne l'identifiant unique de l'utilisateur, généralement l'email
+        return $this->email;
+    }
+
+    public function eraseCredentials(): void
+    {
+        // Si vous stockez des données temporaires sensibles sur l'utilisateur, vous pouvez les effacer ici
+        // Par exemple, $this->plainPassword = null;
     }
 }
