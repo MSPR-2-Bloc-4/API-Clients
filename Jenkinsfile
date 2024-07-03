@@ -14,6 +14,8 @@ pipeline {
 
         stage('Install dependencies') {
                     steps {
+                        sh 'sudo apt-get update'
+                        sh 'sudo apt-get install -y php-xml php-dom'
                         sh 'composer install'
                     }
                 }
