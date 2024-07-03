@@ -12,6 +12,12 @@ pipeline {
             }
         }
 
+        stage('Composer Install') {
+            steps {
+                sh 'composer install'
+            }
+        }
+
         stage('Run tests') {
             steps {
                 sh 'php bin/phpunit --log-junit tests/report.xml'
